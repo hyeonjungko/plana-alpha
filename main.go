@@ -26,7 +26,7 @@ var locations = allLocations{
 	},
 }
 
-func homeLink(w http.ResponseWriter, r *http.Request) {
+func home(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "this is home!")
 }
 
