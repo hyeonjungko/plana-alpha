@@ -27,7 +27,7 @@ var locations = allLocations{
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "this is home!")
+	fmt.Fprint(w, "home-tti")
 }
 
 func createLocation(w http.ResponseWriter, r *http.Request) {
