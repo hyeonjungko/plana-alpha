@@ -10,13 +10,21 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Location struct {
+type location struct {
 	ID          string `json:"ID"`
 	Name        string `json:"Name"`
 	Description string `json:"Description"`
 }
 
-type allLocations []Location
+type user struct {
+	ID        string `json:"user_id"`
+	Username  string `json:"username"`
+	FirstName string `json:"FirstName"`
+	LastName  string `json:"LastName`
+}
+
+type allLocations []location
+type allUsers []user
 
 var locations = allLocations{
 	{
@@ -26,12 +34,35 @@ var locations = allLocations{
 	},
 }
 
+var users = allUsers{
+	{
+		ID:        "1",
+		Username:  "hko",
+		FirstName: "Hyeonjung",
+		LastName:  "Ko",
+	},
+}
+
 func homeLink(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "home-tti")
 }
 
+func createUser(w http.ResponseWriter, r *http.Request) {
+	var newUser user
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "please enter user information")
+	}
+
+	json.Unmarshal(reqBody, &newUser)
+	users = append(users, newUser)
+	w.WriteHeader(http.StatusCreated)
+
+	json.NewEncoder(w).Encode(newUser)
+}
+
 func createLocation(w http.ResponseWriter, r *http.Request) {
-	var newLocation Location
+	var newLocation location
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, "Enter location name and description")
