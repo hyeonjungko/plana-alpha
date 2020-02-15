@@ -43,11 +43,11 @@ var users = allUsers{
 	},
 }
 
-func homeLink(w http.ResponseWriter, r *http.Request) {
+func home(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "home-tti")
 }
 
-func createUser(w http.ResponseWriter, r *http.Request) {
+func signUp(w http.ResponseWriter, r *http.Request) {
 	var newUser user
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -59,6 +59,39 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	json.NewEncoder(w).Encode(newUser)
+}
+
+func logIn(w http.ResponseWriter, r *http.Request) {
+	// pass
+	return
+}
+
+func userPlans(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["userId"]
+
+	// fetch user plans from DB
+	return
+}
+
+func userLikes(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["userId"]
+
+	// fetch user likes from DB
+	return
+}
+
+func userSettings(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["userId"]
+
+	// fetch user settings from DB
+	return
+}
+
+func userProfile(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["userId"]
+
+	// fetch user profile from DB
+	return
 }
 
 func createLocation(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +109,14 @@ func createLocation(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/", homeLink)
+
+	router.HandleFunc("/", home).Methods("GET")
+	router.HandleFunc("/user/login", logIn).Methods("POST")
+	router.HandleFunc("/user/signup", signUp).Methods("POST")
+	router.HandleFunc("/user/{userId}/plans", userPlans).Methods("GET")
+	router.HandleFunc("/user/{userId}/likes", userLikes).Methods("GET")
+	router.HandleFunc("/user/{userId}/settings", userSettings).Methods("GET")
+	router.HandleFunc("/user/{userId}/profile", userProfile).Methods("GET")
+
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
