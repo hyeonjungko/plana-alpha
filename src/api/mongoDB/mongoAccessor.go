@@ -5,58 +5,81 @@ import (
 	"context"
 	"fmt"
 	"log"
-	// "reflect"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type MongoAccessor struct {
+//.Collection("users")
+
+
+func DB() *mongo.Database {
+	return GetClient().Database("PlanA")
+}
+
+type UserAccessor struct {
 	Users *mongo.Collection
 }
 
+//userAccess interface (login, signup)
 func NewUserAccess() auth.UserAccess {
-	return &MongoAccessor{
-		Users: Users,
+	return &UserAccessor{
+		Users: DB().Collection("users"),
 	}
 }
 
+// func NewLocationAccess() auth.LocationAccess {
+// 	return &MongoAccessor{
+// 		Location : DB().Collection("location")
+// 	}
+// }
+
+//Change it to UserAccessor?
+
 //SignUp gets user struct, saves it in DB, returns error
-func (m *MongoAccessor) SignUp(user auth.User) error {
-	hashedPassword, err := bcrypt.GenerateFromPassword(user.HashedPassword, bcrypt.DefaultCost)
-	if err != nil {
-		return auth.ErrorMessage
+func (m *UserAccessor) SignUp(user auth.User) (string, error) {
+	//check if there is matching username
+	var elem auth.User
+	filter := bson.D{{"username", user.Username}}
+	errFind := m.Users.FindOne(context.TODO(), filter).Decode(&elem)
+	if errFind != mongo.ErrNoDocuments {
+		return "", fmt.Errorf("choose different username!")
+	}
+	//create new hashedPassword
+	hashedPassword, errHash := bcrypt.GenerateFromPassword(user.HashedPassword, bcrypt.DefaultCost)
+	if errHash != nil {
+		return "", auth.ErrorMessage
 	}
 	user.HashedPassword = hashedPassword
-		fmt.Println(user)
-
-	// fmt.Println(m.Users)
-	insertResult, err := m.Users.InsertOne(context.TODO(), user)
-	if err != nil {
-		log.Fatal(err)
+	//insert user in DB
+	insertResult, errInsert := m.Users.InsertOne(context.TODO(), user)
+	if errInsert != nil {
+		log.Fatal(errInsert)
 	}
-	return fmt.Errorf("SignUp Complete! Welcome %s!", insertResult.InsertedID)
+	//convert ID to hex
+	userID := insertResult.InsertedID.(primitive.ObjectID).Hex()
+	fmt.Println(userID)
+	return userID, nil
 }
 
 //Login gets userName and password,
-func (m *MongoAccessor) LogIn(username string, password auth.PASSWORD) (auth.User, error) {
+func (m *UserAccessor) LogIn(username string, password auth.PASSWORD) (string, error) {
 	filter := bson.D{{"username", username}}
-	cur, err := m.Users.Find(context.TODO(), filter)
+	var elem auth.User
+	err := m.Users.FindOne(context.TODO(), filter).Decode(&elem)
 	if err != nil {
-		return auth.User{}, auth.ErrorMessage
-	}
-	for cur.Next(context.TODO()) {
-
-		// create a value into which the single document can be decoded
-		var elem auth.User
-		err := cur.Decode(&elem)
-		if err != nil {
-			log.Fatal(err)
+	//IT DOES NOT RETURN ID... 
+    // ErrNoDocuments means that the filter did not match any documents in the collection
+		if err == mongo.ErrNoDocuments {
+			return "", auth.ErrorMessage
 		}
-		// err := bcrypt.CompareHashAndPassword()
-	}
-	if err := cur.Err(); err != nil {
 		log.Fatal(err)
 	}
-	return auth.User{}, nil
+	// fmt.Println(reflect.TypeOf(elem))
+	fmt.Println("Found user", &elem)
+	fmt.Println(elem)
+	userID := elem.Id.Hex()
+	fmt.Println(userID)
+	return userID, nil
 }

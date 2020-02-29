@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"api/auth"
 
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
@@ -30,7 +29,7 @@ type allLocations []location
 
 var JwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-		return auth.JwtKey, nil
+		return JwtKey, nil
 	},
 	SigningMethod: jwt.SigningMethodHS256,
 })
